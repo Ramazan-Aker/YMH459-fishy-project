@@ -1,0 +1,80 @@
+# Unity oluşturulan dosyalar
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# MemoryCaptures çıktıları
+[Mm]emoryCaptures/
+
+# Asset meta verileri (commit'lenmez; Unity Editor tarafından üretilir)
+# NOT: .meta dosyaları COMMIT'lenmelidir — bu satırı silmeyin
+# *.meta
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity3D oluşturulan meta dosyaları (proje root)
+/*.pidb.meta
+/*.pdb.meta
+/*.mdb.meta
+
+# Crashlytics oluşturulan dosyalar
+crashlytics-build.properties
+
+# Compiled dynamic library
+*.bundle
+*.so
+*.dylib
+*.dll
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+
+# Android
+*.apk
+*.aab
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# TextMesh Pro
+Assets/TextMesh\ Pro/
+
+# JetBrains
+.idea/
+*.sln.DotSettings.user
+
+# Cursor / VS Code
+.vscode/
+.cursor/

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000000, type: 3}
+  m_Name: Clownfish_Data
+  m_EditorClassIdentifier: FishMuseum.Data.FishData
+  displayName: "Palyaço Balığı"
+  scientificName: "Amphiprion ocellaris"
+  habitat: "Hint ve Pasifik Okyanusları, sığ mercan resifleri (0–15 m derinlik)"
+  diet: "Omnivor – zooplankton, deniz yosunu ve küçük omurgasızlar"
+  summary: "Palyaço balığı, anemon balığı olarak da bilinir. Deniz şakayıkları (anemone) ile simbiyotik bir ilişki içinde yaşar; zehirli tentaküller onu etkilemez. Turuncu rengi ve üç beyaz çizgisi sayesinde kolayca tanınır. Sosyal yapıları ilginçtir: grupta baskın dişi ölürse, baskın erkek cinsiyetini dişiye dönüştürebilir. IUCN'e göre 'En Az Endişe Verici' türler arasındadır."
+  menuIcon: {fileID: 0}
+  prefab: {fileID: 0}
+  narrationClip: {fileID: 0}
+  parts:
+  - partName: "Dorsal Yüzgeci"
+    infoText: "Sırt yüzgeci (dorsal fin), yüzme yönünü stabilize eder. Palyaço balığında 10–11 yumuşak ışın bulunur."
+    childObjectName: "Part_DorsalFin"
+    tooltipOffset: {x: 0, y: 0.08, z: 0}
+  - partName: "Ağız"
+    infoText: "Küçük terminal ağzıyla plankton ve yosun avlar. Dişleri görece körelmiş, bitki parçalamaya uygundur."
+    childObjectName: "Part_Mouth"
+    tooltipOffset: {x: 0.04, y: 0.02, z: 0.06}
+  - partName: "Göz"
+    infoText: "Büyük, yuvarlak gözleri 180° görüş alanı sağlar. UV ışığını algılayabilir; bu özellik avlanmada kullanılır."
+    childObjectName: "Part_Eye"
+    tooltipOffset: {x: 0.03, y: 0.05, z: 0.05}
+  - partName: "Kuyruk Yüzgeci"
+    infoText: "Yuvarlak kuyruk yüzgeci (caudal fin) ileri–geri manevra için kullanılır. Ani dönüşler ve anemon içine dalış bu yüzgeçle sağlanır."
+    childObjectName: "Part_TailFin"
+    tooltipOffset: {x: -0.08, y: 0.04, z: 0}
