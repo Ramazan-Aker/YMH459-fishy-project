@@ -14,8 +14,8 @@ The application leverages modern AR technologies to bridge the gap between stati
 * **Persistence System:** (Planned) Save and load system for custom modeling configurations and material edits.
 
 ## Technology Stack
-* **Game Engine:** Unity 2021.3 LTS or newer
-* **AR Framework:** AR Foundation (integrated with ARCore/ARKit)
+* **Vuforia:** (for augmented reality tracking and image recognition)
+* **Unity UI:** UI Toolkit (for dynamic UI elements)
 * **Programming Language:** C# (.NET Framework 4.7.1+)
 * **3D Modeling:** Blender (for optimized low-poly assets)
 * **Version Control:** Git
