@@ -57,3 +57,6 @@ sysinfo.txt
 *.appb
 *.unitypackage
 *.app
+
+# Local package archives
+Packages/*.tgz
