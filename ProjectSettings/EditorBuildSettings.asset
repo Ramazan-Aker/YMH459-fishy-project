@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainScene.unity
     guid: 4920cfa036621e4469a20897eebc0794
+  - enabled: 1
+    path: Assets/Scenes/AquariumGame.unity
+    guid: 1bd2db7ff6f84f538c438d99604908cc
   m_configObjects:
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: bc580e73042d42146948656f55ad7a37, type: 2}
