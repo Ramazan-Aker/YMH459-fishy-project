@@ -8,6 +8,11 @@ public class ARAquariumController : MonoBehaviour
 {
     private const string ClownfishName = "marine_clownfish";
     private const string GuppyName = "freshWater_guppy";
+    private const string AngelfishName = "EmperorAngelfish_swim1";
+    private const string SurgeonfishName = "Surgeonfish";
+    private const string Clownfish1Name = "Clownfish 1";
+    private const string WhaleName = "Whale";
+    private const string SharkName = "Shark";
     private const int NoFingerId = -999;
 
     private class FishRuntime
@@ -159,6 +164,38 @@ public class ARAquariumController : MonoBehaviour
         HandleArTouchInput();
     }
 
+    private string GetFishNameFromHierarchy(Transform candidate)
+    {
+        string name = candidate.name;
+        if (name == ClownfishName || name == GuppyName || name == AngelfishName || name == SurgeonfishName || name == Clownfish1Name || name == WhaleName || name == SharkName)
+        {
+            return name;
+        }
+
+        // Check if candidate is under one of our custom ImageTargets
+        Transform parent = candidate.parent;
+        if (parent != null)
+        {
+            string parentName = parent.name;
+            if (parentName == "ImageTarget_Surgeonfish") return SurgeonfishName;
+            if (parentName == "ImageTarget_Clownfish1") return Clownfish1Name;
+            if (parentName == "ImageTarget_Angelfish") return AngelfishName;
+            if (parentName == "ImageTarget" || parentName == "ImageTarget_Clownfish") return ClownfishName;
+            if (parentName == "ImageTarget (1)" || parentName == "ImageTarget_Guppy") return GuppyName;
+            if (parentName == "ImageTarget_Whale") return WhaleName;
+            if (parentName == "ImageTarget_Shark") return SharkName;
+        }
+
+        // Common user naming variants
+        if (name.Equals("fish1", System.StringComparison.OrdinalIgnoreCase)) return Clownfish1Name;
+        if (name.Equals("fish2", System.StringComparison.OrdinalIgnoreCase)) return SurgeonfishName;
+        if (name.Equals("fish3", System.StringComparison.OrdinalIgnoreCase)) return AngelfishName;
+        if (name.Equals("whale", System.StringComparison.OrdinalIgnoreCase)) return WhaleName;
+        if (name.Equals("shark", System.StringComparison.OrdinalIgnoreCase)) return SharkName;
+
+        return null;
+    }
+
     private void CacheFishRoots()
     {
         fishLookup.Clear();
@@ -168,13 +205,14 @@ public class ARAquariumController : MonoBehaviour
         for (int i = 0; i < transforms.Length; i++)
         {
             Transform candidate = transforms[i];
-            if (candidate.name != ClownfishName && candidate.name != GuppyName)
+            string mappedName = GetFishNameFromHierarchy(candidate);
+            if (mappedName == null)
             {
                 continue;
             }
 
             FishRuntime fish = new FishRuntime();
-            fish.fishName = candidate.name;
+            fish.fishName = mappedName;
             fish.root = candidate;
             fish.renderers = candidate.GetComponentsInChildren<Renderer>(true);
             fish.animator = candidate.GetComponent<Animator>();
@@ -282,7 +320,19 @@ public class ARAquariumController : MonoBehaviour
                 continue;
             }
 
-            float targetHeight = fish.fishName == ClownfishName ? 0.12f : 0.16f;
+            float targetHeight;
+            if (fish.fishName == ClownfishName || fish.fishName == Clownfish1Name)
+                targetHeight = 0.12f;
+            else if (fish.fishName == AngelfishName)
+                targetHeight = 0.10f;
+            else if (fish.fishName == SurgeonfishName)
+                targetHeight = 0.14f;
+            else if (fish.fishName == WhaleName)
+                targetHeight = 0.20f;
+            else if (fish.fishName == SharkName)
+                targetHeight = 0.15f;
+            else
+                targetHeight = 0.16f;
             Vector3 localPosition = fish.root.localPosition;
             localPosition.y = targetHeight;
             fish.root.localPosition = localPosition;
@@ -918,12 +968,52 @@ public class ARAquariumController : MonoBehaviour
             return;
         }
 
-        bool isMarine = (aquariumSourceFish != null && aquariumSourceFish.fishName == ClownfishName);
+        // Determine player fish colors based on selected fish species
+        Color playerBody;
+        Color playerAccent;
+        bool hasStripes;
+        string sourceName = (aquariumSourceFish != null) ? aquariumSourceFish.fishName : "";
+
+        if (sourceName == ClownfishName || sourceName == Clownfish1Name)
+        {
+            playerBody  = new Color(1f, 0.42f, 0.04f);     // orange
+            playerAccent = Color.white;
+            hasStripes = true;
+        }
+        else if (sourceName == AngelfishName)
+        {
+            playerBody  = new Color(0.15f, 0.18f, 0.55f);  // deep blue-purple
+            playerAccent = new Color(1f, 0.85f, 0.10f);     // bright yellow stripes
+            hasStripes = true;
+        }
+        else if (sourceName == SurgeonfishName)
+        {
+            playerBody  = new Color(0.10f, 0.45f, 0.95f);  // royal blue
+            playerAccent = new Color(1f, 0.90f, 0.15f);     // yellow tail accent
+            hasStripes = false;
+        }
+        else if (sourceName == WhaleName)
+        {
+            playerBody  = new Color(0.22f, 0.33f, 0.53f);  // steel blue
+            playerAccent = Color.white;
+            hasStripes = false;
+        }
+        else if (sourceName == SharkName)
+        {
+            playerBody  = new Color(0.42f, 0.47f, 0.53f);  // shark grey
+            playerAccent = Color.white;
+            hasStripes = false;
+        }
+        else
+        {
+            // Guppy / default
+            playerBody  = new Color(0.18f, 0.65f, 1f);
+            playerAccent = new Color(0.85f, 0.18f, 0.85f);
+            hasStripes = false;
+        }
 
         // ---- Player fish as UI Image ----
-        Color playerBody   = isMarine ? new Color(1f, 0.42f, 0.04f) : new Color(0.18f, 0.65f, 1f);
-        Color playerAccent = isMarine ? Color.white : new Color(0.85f, 0.18f, 0.85f);
-        Sprite playerSprite = Draw2DFish(200, 124, playerBody, playerAccent, isMarine);
+        Sprite playerSprite = Draw2DFish(200, 124, playerBody, playerAccent, hasStripes);
 
         playerFishInstance = CreateFishUIObject("Player2DFish", playerSprite);
         RectTransform pRT = playerFishInstance.GetComponent<RectTransform>();
@@ -1445,6 +1535,61 @@ public class ARAquariumController : MonoBehaviour
         guppy.feature = "Canli dogurucu bir turdur, yumurta birakmaz. Erkekleri son derece renkli ve gosterisli kuyruk desenlerine sahiptir.";
         guppy.funFact = "Bir disi lepistes, tek ciftlesmeden elde ettigi spermi aylarca saklayarak birden fazla nesil uretebilir!";
         fishInfoDatabase[GuppyName] = guppy;
+
+        FishInfo angelfish = new FishInfo();
+        angelfish.turkishName = "Imparator Melek Baligi (Emperor Angelfish)";
+        angelfish.scientificName = "Pomacanthus imperator";
+        angelfish.family = "Pomacanthidae";
+        angelfish.habitat = "Hint-Pasifik Okyanusu ve Kizildeniz'deki mercan resiflerinde, 1-100 metre derinlikte yasar. Lagünler ve resif yamaclari tercih eder.";
+        angelfish.diet = "Omnivor. Süngerler, tunikatlar (deniz tulumu), algler ve kucuk omurgasizlarla beslenir.";
+        angelfish.size = "30 - 40 cm (yetiskin)";
+        angelfish.feature = "Genc ve yetiskin bireyleri tamamen farkli renk desenlerine sahiptir. Gencler koyu mavi uzerine beyaz ve acik mavi halkalar tasirken, yetiskinler sari-mavi yatay cizgilere donusur.";
+        angelfish.funFact = "Imparator Melek Baligi, yetiskinlige geciste tamamen farkli bir renge burunur. Bu degisim o kadar dramatiktir ki, uzun sure farkli turler sanilmislardir!";
+        fishInfoDatabase[AngelfishName] = angelfish;
+
+        FishInfo surgeonfish = new FishInfo();
+        surgeonfish.turkishName = "Cerrah Baligi (Surgeonfish / Blue Tang)";
+        surgeonfish.scientificName = "Paracanthurus hepatus";
+        surgeonfish.family = "Acanthuridae";
+        surgeonfish.habitat = "Hint-Pasifik Okyanusu'ndaki mercan resiflerinde, ozellikle berrak ve sig sularda yasar. Resif yamaclari ve lagünlerde bulunur.";
+        surgeonfish.diet = "Otcul. Esas olarak algler ve zooplanktonla beslenir. Resiflerdeki alg buyumesini kontrol ederek ekosistemin dengesini korur.";
+        surgeonfish.size = "15 - 31 cm (yetiskin)";
+        surgeonfish.feature = "Kuyruk sapinda jilet gibi keskin bir diken (bistüri) tasir. Tehlike aninda bu dikeni saldiri ve savunma icin kullanir.";
+        surgeonfish.funFact = "'Kayip Balık Nemo' filmindeki Dory karakteri bir Cerrah Baligi'dir! Gercek hayatta ise streslendiginde rengi solar.";
+        fishInfoDatabase[SurgeonfishName] = surgeonfish;
+
+        FishInfo clownfish1 = new FishInfo();
+        clownfish1.turkishName = "Palyaco Baligi - Ocellaris (Clownfish)";
+        clownfish1.scientificName = "Amphiprion ocellaris";
+        clownfish1.family = "Pomacentridae";
+        clownfish1.habitat = "Bati Pasifik ve Dogu Hint Okyanusu'ndaki tropikal mercan resiflerinde, 1-15 metre derinlikte deniz anemonlari arasinda yasar.";
+        clownfish1.diet = "Omnivor. Algler, plankton, isopodlar ve anemon dokungac artiklari ile beslenir. Anemonunu temizleyerek karsilikli fayda saglar.";
+        clownfish1.size = "7 - 11 cm (yetiskin, disiler erkeklerden buyuktur)";
+        clownfish1.feature = "Vucut yuzeyindeki ozel mukus tabakasi sayesinde anemonun zehirli igneciklarinden etkilenmez. Her palyaco baligi, hayatina erkek olarak baslar.";
+        clownfish1.funFact = "Bir palyaco baligi grubu hiyerarsik bir yapi izler: en buyuk birey disi, ikinci buyuk erkektir. Disi olurse, baskin erkek disiye donusur!";
+        fishInfoDatabase[Clownfish1Name] = clownfish1;
+
+        FishInfo whale = new FishInfo();
+        whale.turkishName = "Kambur Balina (Humpback Whale)";
+        whale.scientificName = "Megaptera novaeangliae";
+        whale.family = "Balaenopteridae";
+        whale.habitat = "Tüm dünya okyanuslarında geniş göç yolları boyunca yaşarlar. Yazları kutup sularında beslenir, kışları tropikal sulara üremek için göçerler.";
+        whale.diet = "Karnivor (Filtre ile beslenen). Çoğunlukla kril, plankton ve küçük balık sürülerinden oluşan devasa miktarlarda yiyecek tüketirler.";
+        whale.size = "12 - 16 metre (yetişkin, ağırlığı 30 tona ulaşabilir)";
+        whale.feature = "Şarkı söylemeleriyle ünlüdürler. Erkek kambur balinalar, saatlerce süren son derece karmaşık ve melodik ses dizileri üretebilirler.";
+        whale.funFact = "Bir kambur balinanın kuyruk yüzgecinin altındaki beyaz desenler, tıpkı insan parmak izi gibi tamamen o bireye özeldir ve benzersizdir!";
+        fishInfoDatabase[WhaleName] = whale;
+
+        FishInfo shark = new FishInfo();
+        shark.turkishName = "Büyük Beyaz Köpekbalığı (Great White Shark)";
+        shark.scientificName = "Carcharodon carcharias";
+        shark.family = "Lamnidae";
+        shark.habitat = "Ilıman kıyı sularında, özellikle Güney Afrika, Avustralya, California ve Kuzeydoğu ABD açıklarında yaşarlar.";
+        shark.diet = "Karnivor. Balıklar, vatozlar, deniz memelileri (foklar, deniz aslanları) ve küçük balinalarla beslenir.";
+        shark.size = "4.5 - 6 metre (yetişkin dişiler erkeklerden daha büyüktür)";
+        shark.feature = "Harika avcılardır. Sudaki elektrik alanlarını algılayabilen özel 'Lorenzini Ampulleri' isimli duyu organlarına sahiptirler.";
+        shark.funFact = "Büyük beyaz köpekbalıkları yaşamları boyunca yaklaşık 20.000 adet diş değiştirebilirler! Eskiyen veya kırılan dişlerinin arkasından yenisi gelir.";
+        fishInfoDatabase[SharkName] = shark;
     }
 
     private void CreateInfoPanel()
@@ -1576,15 +1721,19 @@ public class ARAquariumController : MonoBehaviour
     private string PrettyFishName(string fishName)
     {
         if (fishName == ClownfishName)
-        {
             return "Marine Clownfish";
-        }
-
         if (fishName == GuppyName)
-        {
             return "Freshwater Guppy";
-        }
-
+        if (fishName == AngelfishName)
+            return "Emperor Angelfish";
+        if (fishName == SurgeonfishName)
+            return "Surgeonfish";
+        if (fishName == Clownfish1Name)
+            return "Clownfish (Ocellaris)";
+        if (fishName == WhaleName)
+            return "Kambur Balina (Whale)";
+        if (fishName == SharkName)
+            return "Büyük Beyaz Köpekbalığı (Shark)";
         return fishName;
     }
 
