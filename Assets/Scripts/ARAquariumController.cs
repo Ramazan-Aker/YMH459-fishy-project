@@ -134,6 +134,14 @@ public class ARAquariumController : MonoBehaviour
         circleSprite = CreateCircleSprite(256);
 
         CacheFishRoots();
+
+        // Ensure FishNarrator singleton exists
+        if (FishNarrator.Instance == null)
+        {
+            GameObject narratorObj = new GameObject("FishNarrator");
+            narratorObj.AddComponent<FishNarrator>();
+        }
+
         CreateRuntimeUI();
         PopulateFishInfo();
         CreateInfoPanel();
@@ -1706,6 +1714,12 @@ public class ARAquariumController : MonoBehaviour
 
         infoPanel.SetActive(true);
         infoVisible = true;
+
+        // Start fish narration (unique voice per species)
+        if (FishNarrator.Instance != null)
+        {
+            FishNarrator.Instance.Narrate(fish.fishName);
+        }
     }
 
     private void HideFishInfo()
@@ -1716,6 +1730,12 @@ public class ARAquariumController : MonoBehaviour
         }
 
         infoVisible = false;
+
+        // Stop narration when panel closes
+        if (FishNarrator.Instance != null)
+        {
+            FishNarrator.Instance.StopNarration();
+        }
     }
 
     private string PrettyFishName(string fishName)
