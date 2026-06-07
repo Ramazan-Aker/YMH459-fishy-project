@@ -137,9 +137,17 @@ public class FishNarrator : MonoBehaviour
 
     // ─── Public API ─────────────────────────────────────────────────────────────
 
+    public bool IsMuted { get; set; } = false;
+
     /// <summary>Speak the narration for the given fish species.</summary>
     public void Narrate(string fishName)
     {
+        if (IsMuted)
+        {
+            StopNarration();
+            return;
+        }
+
         string script;
         if (!NarrationScripts.TryGetValue(fishName, out script))
         {

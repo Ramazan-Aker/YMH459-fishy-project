@@ -100,7 +100,10 @@ public class ARAquariumController : MonoBehaviour
     private Text infoFeatureValue;
     private Text infoFunFactText;
     private Button infoCloseButton;
+    private Button audioMuteButton;
+    private Button audioRestartButton;
     private bool infoVisible;
+    private string infoCurrentFishName; // tracks which fish info panel is showing
 
     // Aquarium game (UI-based, no extra camera needed)
     private RectTransform gameWorldPanel; // full-screen UI panel that holds fish images
@@ -140,6 +143,13 @@ public class ARAquariumController : MonoBehaviour
         {
             GameObject narratorObj = new GameObject("FishNarrator");
             narratorObj.AddComponent<FishNarrator>();
+        }
+
+        // Ensure FishQuizSystem singleton exists
+        if (FishQuizSystem.Instance == null)
+        {
+            GameObject quizObj = new GameObject("FishQuizSystem");
+            quizObj.AddComponent<FishQuizSystem>();
         }
 
         CreateRuntimeUI();
@@ -1619,18 +1629,31 @@ public class ARAquariumController : MonoBehaviour
         Image headerBg = CreateImage("InfoHeaderBg", infoPanel.transform, new Color(0.12f, 0.45f, 0.74f, 1f));
         SetRect(headerBg.rectTransform, new Vector2(0f, 0.90f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
 
-        // Bold white title, size 40 (was 36)
-        infoTitleText = CreateText("InfoTitle", headerBg.transform, "", 40, TextAnchor.MiddleLeft);
-        SetRect(infoTitleText.rectTransform, new Vector2(0.05f, 0.05f), new Vector2(0.82f, 0.95f), Vector2.zero, Vector2.zero);
+        // Bold white title, size 44 (was 40)
+        infoTitleText = CreateText("InfoTitle", headerBg.transform, "", 44, TextAnchor.MiddleLeft);
+        SetRect(infoTitleText.rectTransform, new Vector2(0.05f, 0.05f), new Vector2(0.42f, 0.95f), Vector2.zero, Vector2.zero);
         infoTitleText.fontStyle = FontStyle.Bold;
         infoTitleText.color = Color.white;
 
+        // Audio Mute/Unmute button
+        audioMuteButton = CreateButton("BtnMuteAudio", headerBg.transform, "Sesi Kapa", new Color(0.12f, 0.58f, 0.95f, 1f));
+        SetRect(audioMuteButton.GetComponent<RectTransform>(), new Vector2(0.44f, 0.15f), new Vector2(0.65f, 0.85f), Vector2.zero, Vector2.zero);
+        audioMuteButton.GetComponentInChildren<Text>().fontSize = 22;
+        audioMuteButton.onClick.AddListener(ToggleMute);
+
+        // Audio Restart button
+        audioRestartButton = CreateButton("BtnRestartAudio", headerBg.transform, "Baştan", new Color(0.10f, 0.60f, 0.30f, 1f));
+        SetRect(audioRestartButton.GetComponent<RectTransform>(), new Vector2(0.67f, 0.15f), new Vector2(0.86f, 0.85f), Vector2.zero, Vector2.zero);
+        audioRestartButton.GetComponentInChildren<Text>().fontSize = 22;
+        audioRestartButton.onClick.AddListener(RestartNarration);
+
+        // Close button
         infoCloseButton = CreateButton("BtnCloseInfo", headerBg.transform, "X", new Color(0.78f, 0.18f, 0.14f, 1f));
-        SetRect(infoCloseButton.GetComponent<RectTransform>(), new Vector2(0.86f, 0.12f), new Vector2(0.97f, 0.88f), Vector2.zero, Vector2.zero);
+        SetRect(infoCloseButton.GetComponent<RectTransform>(), new Vector2(0.88f, 0.15f), new Vector2(0.97f, 0.85f), Vector2.zero, Vector2.zero);
         infoCloseButton.onClick.AddListener(HideFishInfo);
 
-        // Scientific name, size 28 (was 24) in dark slate grey for contrast
-        infoScientificText = CreateText("InfoScientific", infoPanel.transform, "", 28, TextAnchor.MiddleLeft);
+        // Scientific name, size 30 (was 28) in dark slate grey for contrast
+        infoScientificText = CreateText("InfoScientific", infoPanel.transform, "", 30, TextAnchor.MiddleLeft);
         SetRect(infoScientificText.rectTransform, new Vector2(0.05f, 0.84f), new Vector2(0.95f, 0.89f), Vector2.zero, Vector2.zero);
         infoScientificText.fontStyle = FontStyle.Italic;
         infoScientificText.color = new Color(0.25f, 0.35f, 0.45f, 1f);
@@ -1639,30 +1662,42 @@ public class ARAquariumController : MonoBehaviour
         Image divider1 = CreateImage("Divider1", infoPanel.transform, new Color(0.85f, 0.88f, 0.92f, 1f));
         SetRect(divider1.rectTransform, new Vector2(0.05f, 0.835f), new Vector2(0.95f, 0.838f), Vector2.zero, Vector2.zero);
 
-        CreateInfoRow("Habitat", "YASAM ALANI", 0.82f, 0.68f);
-        CreateInfoRow("Diet", "BESLENME", 0.66f, 0.52f);
-        CreateInfoRow("Size", "BOYUT", 0.50f, 0.40f);
-        CreateInfoRow("Feature", "OZELLIK", 0.38f, 0.22f);
+        CreateInfoRow("Habitat", "YASAM ALANI", 0.82f, 0.70f);
+        CreateInfoRow("Diet", "BESLENME", 0.68f, 0.57f);
+        CreateInfoRow("Size", "BOYUT", 0.55f, 0.46f);
+        CreateInfoRow("Feature", "OZELLIK", 0.44f, 0.28f);
 
         // Warm light yellow/cream container for Fun Fact
         Image funFactBg = CreateImage("FunFactBg", infoPanel.transform, new Color(0.96f, 0.94f, 0.88f, 1f));
-        SetRect(funFactBg.rectTransform, new Vector2(0.03f, 0.03f), new Vector2(0.97f, 0.16f), Vector2.zero, Vector2.zero);
+        SetRect(funFactBg.rectTransform, new Vector2(0.03f, 0.03f), new Vector2(0.97f, 0.15f), Vector2.zero, Vector2.zero);
 
         Outline funFactOutline = funFactBg.gameObject.AddComponent<Outline>();
         funFactOutline.effectColor = new Color(0.85f, 0.82f, 0.75f, 0.5f);
         funFactOutline.effectDistance = new Vector2(1f, -1f);
 
-        // Fun Fact Title, size 24 (was 20) in dark bronze/orange
-        Text funFactLabel = CreateText("FunFactLabel", funFactBg.transform, "BILIYOR MUYDUNUZ?", 24, TextAnchor.UpperCenter);
+        // Fun Fact Title, size 28 (was 24) in dark bronze/orange
+        Text funFactLabel = CreateText("FunFactLabel", funFactBg.transform, "BILIYOR MUYDUNUZ?", 28, TextAnchor.UpperCenter);
         SetRect(funFactLabel.rectTransform, new Vector2(0.03f, 0.62f), new Vector2(0.97f, 0.95f), Vector2.zero, Vector2.zero);
         funFactLabel.fontStyle = FontStyle.Bold;
         funFactLabel.color = new Color(0.75f, 0.35f, 0.05f, 1f);
 
-        // Fun Fact Text, size 24 (was 20) in dark charcoal
-        infoFunFactText = CreateText("InfoFunFact", funFactBg.transform, "", 24, TextAnchor.UpperCenter);
+        // Fun Fact Text, size 28 (was 24) in dark charcoal
+        infoFunFactText = CreateText("InfoFunFact", funFactBg.transform, "", 28, TextAnchor.UpperCenter);
         SetRect(infoFunFactText.rectTransform, new Vector2(0.04f, 0.05f), new Vector2(0.96f, 0.62f), Vector2.zero, Vector2.zero);
         infoFunFactText.color = new Color(0.25f, 0.22f, 0.18f, 1f);
         infoFunFactText.fontStyle = FontStyle.Italic;
+
+        // "Mini Test Başlat" button at the very bottom of the info panel
+        Button quizBtn = CreateButton("BtnStartQuiz", infoPanel.transform, "🎯  Mini Test Başlat", new Color(0.10f, 0.52f, 0.30f, 1f));
+        SetRect(quizBtn.GetComponent<RectTransform>(), new Vector2(0.10f, 0.17f), new Vector2(0.90f, 0.25f), Vector2.zero, Vector2.zero);
+        quizBtn.onClick.AddListener(() =>
+        {
+            if (FishQuizSystem.Instance != null)
+            {
+                FishQuizSystem.Instance.Initialise(uiCanvas, uiFont, circleSprite);
+                FishQuizSystem.Instance.StartQuiz(infoCurrentFishName);
+            }
+        });
 
         infoPanel.SetActive(false);
         infoVisible = false;
@@ -1670,15 +1705,15 @@ public class ARAquariumController : MonoBehaviour
 
     private void CreateInfoRow(string name, string label, float top, float bottom)
     {
-        // Category Label, size 26 (was 22) in soft blue
-        Text labelText = CreateText(name + "Label", infoPanel.transform, label, 26, TextAnchor.UpperLeft);
-        SetRect(labelText.rectTransform, new Vector2(0.05f, top - 0.06f), new Vector2(0.95f, top), Vector2.zero, Vector2.zero);
+        // Category Label, size 30 (was 26) in soft blue
+        Text labelText = CreateText(name + "Label", infoPanel.transform, label, 30, TextAnchor.UpperLeft);
+        SetRect(labelText.rectTransform, new Vector2(0.05f, top - 0.04f), new Vector2(0.95f, top), Vector2.zero, Vector2.zero);
         labelText.fontStyle = FontStyle.Bold;
         labelText.color = new Color(0.12f, 0.45f, 0.74f, 1f);
 
-        // Content Text, size 26 (was 22) in dark charcoal for maximum readability
-        Text valueText = CreateText(name + "Value", infoPanel.transform, "", 26, TextAnchor.UpperLeft);
-        SetRect(valueText.rectTransform, new Vector2(0.05f, bottom), new Vector2(0.95f, top - 0.05f), Vector2.zero, Vector2.zero);
+        // Content Text, size 30 (was 26) in dark charcoal for maximum readability
+        Text valueText = CreateText(name + "Value", infoPanel.transform, "", 30, TextAnchor.UpperLeft);
+        SetRect(valueText.rectTransform, new Vector2(0.05f, bottom), new Vector2(0.95f, top - 0.045f), Vector2.zero, Vector2.zero);
         valueText.color = new Color(0.15f, 0.15f, 0.15f, 1f);
 
         if (name == "Habitat") infoHabitatValue = valueText;
@@ -1704,6 +1739,8 @@ public class ARAquariumController : MonoBehaviour
             return;
         }
 
+        infoCurrentFishName = fish.fishName;
+
         infoTitleText.text = info.turkishName;
         infoScientificText.text = info.scientificName + "  |  " + info.family;
         infoHabitatValue.text = info.habitat;
@@ -1715,10 +1752,59 @@ public class ARAquariumController : MonoBehaviour
         infoPanel.SetActive(true);
         infoVisible = true;
 
+        UpdateMuteButtonUI();
+
         // Start fish narration (unique voice per species)
         if (FishNarrator.Instance != null)
         {
             FishNarrator.Instance.Narrate(fish.fishName);
+        }
+    }
+
+    private void ToggleMute()
+    {
+        if (FishNarrator.Instance != null)
+        {
+            bool newMuteState = !FishNarrator.Instance.IsMuted;
+            FishNarrator.Instance.IsMuted = newMuteState;
+            UpdateMuteButtonUI();
+
+            if (newMuteState)
+            {
+                FishNarrator.Instance.StopNarration();
+            }
+            else
+            {
+                if (infoVisible && !string.IsNullOrEmpty(infoCurrentFishName))
+                {
+                    FishNarrator.Instance.Narrate(infoCurrentFishName);
+                }
+            }
+        }
+    }
+
+    private void RestartNarration()
+    {
+        if (FishNarrator.Instance != null && infoVisible && !string.IsNullOrEmpty(infoCurrentFishName))
+        {
+            if (FishNarrator.Instance.IsMuted)
+            {
+                FishNarrator.Instance.IsMuted = false;
+                UpdateMuteButtonUI();
+            }
+            FishNarrator.Instance.Narrate(infoCurrentFishName);
+        }
+    }
+
+    private void UpdateMuteButtonUI()
+    {
+        if (audioMuteButton != null)
+        {
+            Text btnText = audioMuteButton.GetComponentInChildren<Text>();
+            if (btnText != null)
+            {
+                btnText.text = (FishNarrator.Instance != null && FishNarrator.Instance.IsMuted) ? "Sesi Aç" : "Sesi Kapa";
+            }
         }
     }
 
@@ -2003,5 +2089,119 @@ public class ARAquariumController : MonoBehaviour
 
         texture.Apply();
         return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f));
+    }
+
+    private void StopVuforiaRuntime()
+    {
+        try
+        {
+            // 1. Stop and Deinit CameraDevice
+            System.Type cameraDeviceType = null;
+            foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                var type = assembly.GetType("Vuforia.CameraDevice");
+                if (type != null)
+                {
+                    cameraDeviceType = type;
+                    break;
+                }
+            }
+
+            if (cameraDeviceType != null)
+            {
+                var instanceProp = cameraDeviceType.GetProperty("Instance");
+                if (instanceProp != null)
+                {
+                    object cameraDeviceInstance = instanceProp.GetValue(null);
+                    if (cameraDeviceInstance != null)
+                    {
+                        var stopMethod = cameraDeviceType.GetMethod("Stop");
+                        if (stopMethod != null) stopMethod.Invoke(cameraDeviceInstance, null);
+                        
+                        var deinitMethod = cameraDeviceType.GetMethod("Deinit");
+                        if (deinitMethod != null) deinitMethod.Invoke(cameraDeviceInstance, null);
+                        
+                        Debug.Log("[ARAquariumController] Stopped & Deinitialized CameraDevice.");
+                    }
+                }
+            }
+
+            // 2. Deinit VuforiaRuntime
+            System.Type runtimeType = null;
+            foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                var type = assembly.GetType("Vuforia.VuforiaRuntime");
+                if (type != null)
+                {
+                    runtimeType = type;
+                    break;
+                }
+            }
+
+            if (runtimeType != null)
+            {
+                var instanceProp = runtimeType.GetProperty("Instance");
+                if (instanceProp != null)
+                {
+                    object runtimeInstance = instanceProp.GetValue(null);
+                    if (runtimeInstance != null)
+                    {
+                        var deinitMethod = runtimeType.GetMethod("Deinit");
+                        if (deinitMethod != null)
+                        {
+                            deinitMethod.Invoke(runtimeInstance, null);
+                            Debug.Log("[ARAquariumController] Deinitialized VuforiaRuntime.");
+                        }
+                    }
+                }
+            }
+
+            // 3. Disable VuforiaBehaviour
+            System.Type behaviourType = null;
+            foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                var type = assembly.GetType("Vuforia.VuforiaBehaviour");
+                if (type != null)
+                {
+                    behaviourType = type;
+                    break;
+                }
+            }
+
+            if (behaviourType != null)
+            {
+                UnityEngine.Object vuforiaInstance = UnityEngine.Object.FindObjectOfType(behaviourType);
+                if (vuforiaInstance != null)
+                {
+                    var enabledProp = behaviourType.GetProperty("enabled");
+                    if (enabledProp != null)
+                    {
+                        enabledProp.SetValue(vuforiaInstance, false);
+                        Debug.Log("[ARAquariumController] Disabled VuforiaBehaviour.");
+                    }
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("[ARAquariumController] StopVuforiaRuntime error: " + e.Message);
+        }
+    }
+
+    private System.Collections.IEnumerator GoToMainMenuCoroutine()
+    {
+        if (FishNarrator.Instance != null)
+        {
+            FishNarrator.Instance.StopNarration();
+        }
+
+        // 1. Stop Vuforia tracking and release camera device cleanly
+        StopVuforiaRuntime();
+
+        // 2. Wait a short delay to allow the camera hardware and thread to close cleanly
+        yield return new WaitForSecondsRealtime(0.25f);
+
+        // 3. Load MainMenu scene
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
 }
